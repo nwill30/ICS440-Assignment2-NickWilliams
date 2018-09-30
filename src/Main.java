@@ -1,17 +1,21 @@
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Main {
 
     public static void main(String[] args){
-
-        UserInterface userInput = new UserInterface();
+        WeatherData[] resultSet = new WeatherData[5];
+        UserInterface userInput = null;
+        try {
+            userInput = new UserInterface();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 //        File userDirectory = new File(System.getProperty("user.dir"));
         File stationInputFile = new File("stations.txt");
-        ArrayList<String> stationIntputData = readFileInput(stationInputFile);
+        ArrayList<String> stationInputData = readFileInput(stationInputFile);
         ArrayList<StationData> stationList = new ArrayList<>();
-        for(String i : stationIntputData){
+        for(String i : stationInputData){
             stationList.add(processStationLine(i));
         }
 
@@ -19,8 +23,13 @@ public class Main {
         ArrayList<String > weatherInputData = readFileInput(weatherInputFile);
         ArrayList<WeatherData> weatherList = new ArrayList<>();
         for(String i : weatherInputData){
-            processWeatherLine(i);
+            if(userInput.isMaximum()){
+                resultSet =searchMax(resultSet, processWeatherFile(i));
+            }else if(userInput.isMinimum()){
+//                resultSet = searchMin(resultSet, processWeatherFile(i));
+            }
         }
+
 
 
 
@@ -42,7 +51,7 @@ public class Main {
         return fileList;
     }
 
-    public static void processWeatherLine(String thisLine){
+    public static ArrayList<WeatherData> processWeatherFile(String thisLine){
         ArrayList<WeatherData> weatherDataList = new ArrayList<>();
         String id = thisLine.substring(0,11);
         int year = Integer.valueOf(thisLine.substring(11,15).trim());
@@ -55,9 +64,8 @@ public class Main {
             WeatherData wd = new WeatherData(id,year,month,i+1,element,value,qflag);
             weatherDataList.add(wd);
         }
-        System.out.println(weatherDataList);
+        return weatherDataList;
     }
-
 
     public static StationData processStationLine(String thisLine){
 
@@ -71,6 +79,18 @@ public class Main {
         return sd;
     }
 
+    private static WeatherData[] searchMax(WeatherData[] resultSet, ArrayList<WeatherData> weatherData) {
+        /**can I sort nulls to the front?*/
+        for(WeatherData i : weatherData){
+            if(resultSet[0]==null){
+                resultSet[0]=i;
+            }else {
+
+            }
+        }
+
+        return resultSet;
+    }
 }
 
 
