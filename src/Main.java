@@ -1,5 +1,8 @@
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class Main {
 
@@ -30,9 +33,9 @@ public class Main {
             }
         }
 
-
-
-
+        for(WeatherData i : resultSet){
+            System.out.println(i.toString());
+        }
     }
 
     public static ArrayList<String> readFileInput(File inputFile) {
@@ -84,8 +87,32 @@ public class Main {
         for(WeatherData i : weatherData){
             if(resultSet[0]==null){
                 resultSet[0]=i;
+                resultSet = sortList(resultSet);
             }else {
+                if(i.compareTo(resultSet[0])>0){
+                    resultSet[0] = i;
+                    resultSet = sortList(resultSet);
+                }
+            }
+        }
+        resultSet = sortList(resultSet);
+        return resultSet;
+    }
 
+    private static WeatherData[] sortList(WeatherData[] resultSet) {
+//        ArrayList<WeatherData> tempList = new ArrayList<>();
+//        for(int i = 0;i<resultSet.length;i++){
+//            tempList.add(resultSet[i]);
+//        }
+//        Collections.sort(tempList);
+//        WeatherData[] sortedSet = new WeatherData[5];
+//        sortedSet = tempList.toArray(sortedSet);
+        for(int i = 0; i < resultSet.length-1;i++){
+            if (resultSet[i].compare(resultSet[i+1])>=0){
+                WeatherData promote = resultSet[i];
+                WeatherData demote = resultSet[i+1];
+                resultSet[i] = demote;
+                resultSet[i+1]= promote;
             }
         }
 
