@@ -5,12 +5,12 @@ import java.util.InputMismatchException;
 
 public class UserInterface {
 
-    private static int year_start;
-    private static int year_end;
-    private static int month_start;
-    private static int month_end;
-    private static boolean minimum = false;
-    private static boolean maximum = false;
+    private int year_start;
+    private int year_end;
+    private int month_start;
+    private int month_end;
+    private boolean minimum = false;
+    private boolean maximum = false;
 
     public UserInterface() throws IOException {
         System.out.println("This application will display the top/bottom five temperatures around the world from a given period.");
@@ -134,7 +134,7 @@ public class UserInterface {
     }
 
     public void setYear_start(int year_start) {
-        UserInterface.year_start = year_start;
+        this.year_start = year_start;
     }
 
     public int getYear_end() {
@@ -142,7 +142,7 @@ public class UserInterface {
     }
 
     public void setYear_end(int year_end) {
-        UserInterface.year_end = year_end;
+        this.year_end = year_end;
     }
 
     public int getMonth_start() {
@@ -150,7 +150,7 @@ public class UserInterface {
     }
 
     public void setMonth_start(int month_start) {
-        UserInterface.month_start = month_start;
+        this.month_start = month_start;
     }
 
     public int getMonth_end() {
@@ -158,7 +158,7 @@ public class UserInterface {
     }
 
     public void setMonth_end(int month_end) {
-        UserInterface.month_end = month_end;
+        this.month_end = month_end;
     }
 
     public boolean isMinimum() {
@@ -166,7 +166,7 @@ public class UserInterface {
     }
 
     public void setMinimum(boolean minimum) {
-        UserInterface.minimum = minimum;
+        this.minimum = minimum;
     }
 
     public boolean isMaximum() {
@@ -174,7 +174,7 @@ public class UserInterface {
     }
 
     public void setMaximum(boolean maximum) {
-        UserInterface.maximum = maximum;
+        this.maximum = maximum;
     }
 
 
