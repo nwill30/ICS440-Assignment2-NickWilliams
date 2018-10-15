@@ -1,51 +1,134 @@
+import jdk.nashorn.internal.codegen.CompilerConstants;
+
 import java.io.*;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class Main {
 
-    public static void main(String[] args){
-        WeatherData[] resultSet = new WeatherData[5];
+    public static void main(String[] args) {
         UserInterface userInput = null;
+        WeatherData[] resultSet = new WeatherData[5];//Final result set destination (min/max 5)
+
         try {
-            userInput = new UserInterface();
+            userInput = new UserInterface();//Instantiate new UI for input ranges and min/max outcome.
         } catch (IOException e) {
             e.printStackTrace();
         }
-        File stationInputFile = new File("stations.txt");
-        ArrayList<String> stationInputData = readFileInput(stationInputFile);
-        HashMap<String, StationData> stationMap = new HashMap<>();
-        for(String i : stationInputData){
-            StationData newStation = processStationLine(i);
-            stationMap.put(newStation.getId(),newStation);
-        }
-        File dir = new File("ghcnd_hcn");
-        File[] weatherInputFile = dir.listFiles();
-        if(weatherInputFile != null ){
-            for(File file : weatherInputFile){
-                for(String i : readFileInput(file)){
-                    ArrayList<WeatherData> processList = processWeatherFile(i, userInput);
-                    if(!(processList == null)){
-                        if(userInput.isMaximum()){
-                            resultSet =searchMax(resultSet, processList);
-                        }else if(userInput.isMinimum()){
-                            resultSet = searchMin(resultSet, processList);
-                        }
-                    }
-                }
-            }
-        }
 
+        HashMap<String, StationData> stationMap = getStationMap();
 
-        for(WeatherData i : resultSet){
-            System.out.println(i.toString());
+        resultSet = getResultsSet(userInput);
+
+        for (WeatherData i : resultSet) {
+            System.out.println("Final results" + i.toString());
 //            System.out.println(stationMap.get(i.getId()).toString());
         }
     }
 
+    /**
+     * Processes station text in application directory
+     * Set station data to hashmap for easy retrival
+     *
+     * @return HashMap: Station Name String, StationData Object
+     */
+    private static HashMap<String, StationData> getStationMap() {
+        File stationInputFile = new File("stations.txt");
+        ArrayList<String> stationInputData = readFileInput(stationInputFile);
+        HashMap<String, StationData> stationMap = new HashMap<>();
+        for (String i : stationInputData) {
+            StationData newStation = processStationLine(i);
+            stationMap.put(newStation.getId(), newStation);
+        }
+        return stationMap;
+    }
+
+    public static StationData processStationLine(String thisLine) {
+
+        StationData sd = new StationData();
+        sd.setId(thisLine.substring(0, 11));
+        sd.setLatitude(Float.valueOf(thisLine.substring(12, 20).trim()));
+        sd.setLongitude(Float.valueOf(thisLine.substring(21, 30).trim()));
+        sd.setElevation(Float.valueOf(thisLine.substring(31, 37).trim()));
+        sd.setState(thisLine.substring(38, 40));
+        sd.setName(thisLine.substring(41, 71));
+        return sd;
+    }
+
+    private static WeatherData[] getResultsSet(UserInterface userInput) {
+        List<Future<WeatherData[]>> resultList = new ArrayList<Future<WeatherData[]>>();
+        ExecutorService executorService = Executors.newFixedThreadPool(25);
+
+        File dir = new File("ghcnd_hcn");
+        File[] weatherInputFile = dir.listFiles();
+        if (weatherInputFile != null) {//Test file exists before processing
+            for (File file : weatherInputFile) {
+                for (String i : readFileInput(file)) {
+                    Callable processWeatherFiles = new ProcessWeatherFiles(userInput, i);
+                    Future<WeatherData[]> results = executorService.submit(processWeatherFiles);
+                    resultList.add(results);
+                }
+            }
+        }
+        List<WeatherData> weatherDataList = new ArrayList<>();
+        for (Future<WeatherData[]> i : resultList) {
+            try {
+                for (WeatherData j : i.get()) {
+                    if (j != null) {
+                        weatherDataList.add(j);
+                    }
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        executorService.shutdown();
+        WeatherData[] finalResults = processResults(userInput, weatherDataList);
+        return finalResults;
+    }
+
+    private static WeatherData[] processResults(UserInterface userInput, List<WeatherData> weatherDataList) {
+        int countdown = weatherDataList.size();
+        Callable processWeatherList = new ProcessWeatherList(userInput, weatherDataList);
+        List<Future<WeatherData[]>> resultList = new ArrayList<Future<WeatherData[]>>();
+        ExecutorService executorService = Executors.newFixedThreadPool(4);
+        Future<WeatherData[]> futureResult1 = executorService.submit(processWeatherList);
+        resultList.add(futureResult1);
+        Future<WeatherData[]> futureResult2 = executorService.submit(processWeatherList);
+        resultList.add(futureResult2);
+        Future<WeatherData[]> futureResult3 = executorService.submit(processWeatherList);
+        resultList.add(futureResult3);
+        Future<WeatherData[]> futureResult4 = executorService.submit(processWeatherList);
+        resultList.add(futureResult4);
+        executorService.shutdown();
+
+        WeatherData[] finalResults = getFinalResults(userInput,resultList);
+        return finalResults;
+    }
+
+    private static WeatherData[] getFinalResults(UserInterface userInput, List<Future<WeatherData[]>> resultList) {
+        WeatherData[] returnList = new WeatherData[5];
+        ArrayList<WeatherData> tempList = new ArrayList<>();
+        for (Future<WeatherData[]> i : resultList){
+            try {
+                for (WeatherData j : i.get()){
+                    tempList.add(j);
+                    Collections.sort(tempList);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        for(int i =0;i<returnList.length;i++){
+            returnList[i] = tempList.get(i);
+        }
+        return returnList;
+    }
 
     public static ArrayList<String> readFileInput(File inputFile) {
         ArrayList<String> fileList = new ArrayList<>();
@@ -63,106 +146,6 @@ public class Main {
         return fileList;
     }
 
-    public static ArrayList<WeatherData> processWeatherFile(String thisLine, UserInterface userInput){
-        ArrayList<WeatherData> weatherDataList = new ArrayList<>();
-        String id = thisLine.substring(0,11);
-        int year = Integer.valueOf(thisLine.substring(11,15).trim());
-        int month = Integer.valueOf(thisLine.substring(15,17).trim());
-        String element = thisLine.substring(17,21);
-        int days = (thisLine.length() - 21) / 8; // Calculate the number of days in the line
-        if(year < userInput.getYear_start() || (year == userInput.getYear_start() && month < userInput.getMonth_start())){
-            return null;
-        }else if(year > userInput.getYear_end() || (year == userInput.getYear_end() && month > userInput.getMonth_end())){
-            return null;
-        }else{
-            for (int i = 0; i < days; i++) {         // Process each day in the line.
-                int value = Integer.valueOf(thisLine.substring(21+8*i,26+8*i).trim());
-                String qflag = thisLine.substring(27+8*i,28+8*i);
-                WeatherData wd = new WeatherData(id,year,month,i+1,element,value,qflag);
-                weatherDataList.add(wd);
-            }
-        }
-
-        return weatherDataList;
-    }
-
-    public static StationData processStationLine(String thisLine){
-
-        StationData sd = new StationData();
-        sd.setId(thisLine.substring(0,11));
-        sd.setLatitude(Float.valueOf(thisLine.substring(12,20).trim()));
-        sd.setLongitude(Float.valueOf(thisLine.substring(21,30).trim()));
-        sd.setElevation(Float.valueOf(thisLine.substring(31,37).trim()));
-        sd.setState(thisLine.substring(38,40));
-        sd.setName(thisLine.substring(41,71));
-        return sd;
-    }
-
-    private static WeatherData[] searchMax(WeatherData[] resultSet, ArrayList<WeatherData> weatherData) {
-        int sortMinMax = 1;
-        /**can I sort nulls to the front?*/
-        for(WeatherData i : weatherData){
-            if(resultSet[0]==null){
-                resultSet[0]=i;
-                resultSet = sortList(resultSet, sortMinMax);
-            }else {
-                if(i.compareTo(resultSet[0])>0){
-                    resultSet[0] = i;
-                    resultSet = sortList(resultSet, sortMinMax);
-                }
-            }
-        }
-        resultSet = sortList(resultSet,sortMinMax);
-        return resultSet;
-    }
-
-    private static WeatherData[] searchMin(WeatherData[] resultSet, ArrayList<WeatherData> weatherData) {
-        int sortMinMax = 0;
-        /**can I sort nulls to the front?*/
-        for(WeatherData i : weatherData){
-            if(resultSet[0]==null){
-                resultSet[0]=i;
-                resultSet = sortList(resultSet, sortMinMax);
-            }else {
-                if(i.compareTo(resultSet[0])<0){
-                    resultSet[0] = i;
-                    resultSet = sortList(resultSet, sortMinMax);
-                }
-            }
-        }
-        resultSet = sortList(resultSet,sortMinMax);
-        return resultSet;
-    }
-
-    private static WeatherData[] sortList(WeatherData[] resultSet, int sortMinMax) {
-
-        switch (sortMinMax){
-            case 1 :
-                for(int i = 0; i < resultSet.length-1;i++){
-                    if (resultSet[i].compare(resultSet[i+1])>=0){
-                        WeatherData promote = resultSet[i];
-                        WeatherData demote = resultSet[i+1];
-                        resultSet[i] = demote;
-                        resultSet[i+1]= promote;
-                    }
-                }
-                break;
-            case 0 :
-                for(int i = 0; i < resultSet.length-1;i++){
-                    if (resultSet[i].compare(resultSet[i+1])<=0){
-                        WeatherData promote = resultSet[i];
-                        WeatherData demote = resultSet[i+1];
-                        resultSet[i] = demote;
-                        resultSet[i+1]= promote;
-                    }
-                }
-                break;
-        }
-
-
-
-        return resultSet;
-    }
 }
 
 
