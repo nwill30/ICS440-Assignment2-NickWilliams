@@ -4,25 +4,32 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+/**
+ * ICS440 Assignment 2 Multi-thread Historical Weather cache
+ * Supplied files from ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/ contain Weather station details and historical reports for those stations.
+ * Application requests a date rang and desired outcome, 1 =  top 5 highest temps , 0 = top 5 lowest temps
+ * It reads and stores station details before processing weather files.
+ * Then searches for TMIN/TMAX records depending on the user input using x number of threads.
+ * The min/max 5 are returned from each file and added to a list which is then parsed once again by 4 threads to a subset of 20 minx/max values
+ * finally the subset is parsed once more to the final set of 5. *
+ * @author  Nick Williams
+ * @since   2018-10-14
+ */
 public class Main {
 
     public static void main(String[] args) {
         UserInterface userInput = null;
         WeatherData[] resultSet = new WeatherData[5];//Final result set destination (min/max 5)
-
         try {
             userInput = new UserInterface();//Instantiate new UI for input ranges and min/max outcome.
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         HashMap<String, StationData> stationMap = getStationMap();
-
         resultSet = getResultsSet(userInput);
-
         for (WeatherData i : resultSet) {
-            System.out.println("Final results" + i.toString());
-//            System.out.println(stationMap.get(i.getId()).toString());
+            System.out.println(i.toString());
+            System.out.println(stationMap.get(i.getId()).toString());
         }
     }
 
@@ -43,6 +50,11 @@ public class Main {
         return stationMap;
     }
 
+    /**
+     * Station parsing code provided in assignment
+     * Set's station object values from predetermined string index ranges
+     * @param thisLine
+     * */
     public static StationData processStationLine(String thisLine) {
 
         StationData sd = new StationData();
@@ -55,6 +67,16 @@ public class Main {
         return sd;
     }
 
+    /**
+     * The initial process (1/3)
+     * Receives userInput object to parameterize the parsing of the files and inform the outcome
+     * resultList is created to house the weatherData array results attained by each thread from a future Object
+     * The number of threads is set to the executorService and the local directory containing the files is parsed
+     * Each file in the directory is parsed for the top 5 results (based on the userInput parms) and sent to a Future
+     * Once resultList has received all future promises each WeatherData obejct is parsed from it's array into an arrayList
+     * The new arrayList is sent to be processed further by processResults
+     * @param userInput
+     * */
     private static WeatherData[] getResultsSet(UserInterface userInput) {
         List<Future<WeatherData[]>> resultList = new ArrayList<Future<WeatherData[]>>();
         ExecutorService executorService = Executors.newFixedThreadPool(25);
@@ -90,8 +112,14 @@ public class Main {
         return finalResults;
     }
 
+    /**
+     * In the middle processing step (2/3)
+     * 4 Threads and Future WeatherData Arrays are created to process the ArrayList of results that's been stored into processWeatherList
+     * The futures are again saved to an array list, individual results are not removed from their arrays at this point however.
+     * @param userInput
+     * @param weatherDataList
+     * */
     private static WeatherData[] processResults(UserInterface userInput, List<WeatherData> weatherDataList) {
-        int countdown = weatherDataList.size();
         Callable processWeatherList = new ProcessWeatherList(userInput, weatherDataList);
         List<Future<WeatherData[]>> resultList = new ArrayList<Future<WeatherData[]>>();
         ExecutorService executorService = Executors.newFixedThreadPool(4);
@@ -109,6 +137,12 @@ public class Main {
         return finalResults;
     }
 
+    /**
+     * In the final step (3/3)
+     * The collection of WeatherData arrays are processed iteratively
+     * Each record is added to another array list tempList which is the sorted.
+     * Finally once all of the values have been sorted the top 5 results are stored into a separate WeatherData Array and returned
+     * */
     private static WeatherData[] getFinalResults(UserInterface userInput, List<Future<WeatherData[]>> resultList) {
         WeatherData[] returnList = new WeatherData[5];
         ArrayList<WeatherData> tempList = new ArrayList<>();
@@ -116,7 +150,6 @@ public class Main {
             try {
                 for (WeatherData j : i.get()){
                     tempList.add(j);
-                    Collections.sort(tempList);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -124,12 +157,21 @@ public class Main {
                 e.printStackTrace();
             }
         }
+        Collections.sort(tempList);//Sorts min -> max
+        if(userInput.isMaximum()){//check to sort mex -> min
+            Collections.reverse(tempList);
+        }
         for(int i =0;i<returnList.length;i++){
             returnList[i] = tempList.get(i);
         }
         return returnList;
     }
 
+    /**
+     * Receives an existing input file and reads through and assigns each line to an array
+     * @param inputFile
+     * @return fileList
+     */
     public static ArrayList<String> readFileInput(File inputFile) {
         ArrayList<String> fileList = new ArrayList<>();
         try {

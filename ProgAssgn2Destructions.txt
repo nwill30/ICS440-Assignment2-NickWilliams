@@ -34,7 +34,7 @@ Y Your program should use thread pools, futures and callables to complete its pr
 Y Second, you should consolidate all the query results from all the files into a single list.
     You should do this as each query completes.
 
- Third, after all the queries have completed, you should generate a second set of four futures.
+y Third, after all the queries have completed, you should generate a second set of four futures.
     Those futures should iterate over the consolidated list you just constructed, and find the top results for that query.
 
  Fourth, in a single thread, you should find the top results for all your futures.

@@ -12,6 +12,11 @@ public class UserInterface {
     private boolean minimum = false;
     private boolean maximum = false;
 
+    /**
+     * UserInterface begins with a prompt to the user briefly explaining the application design
+     * each class attribute is set by it's accompanying console interface
+     * The reader and inputstream reader are closed before returning control back to the application.
+     * */
     public UserInterface() throws IOException {
         System.out.println("This application will display the top/bottom five temperatures around the world from a given period.");
         System.out.println("Please provide a start and end year/month and weather you'd like the min or max temps for that period.");
@@ -32,6 +37,12 @@ public class UserInterface {
         }
     }
 
+    /**
+     * Min/MaxYear values are hard coded to match the years available in the Weather files
+     * For the start year the user need only enter a valid year between minx/max
+     * If an invalid value is entered the user is notified and asked to re-enter a value.
+     * @param reader
+     * */
     private void setYearStartConsole(BufferedReader reader) throws IOException {
         int minYear = 1890;
         int maxYear = 2018;
@@ -50,6 +61,12 @@ public class UserInterface {
         }
     }
 
+    /**
+     * The minYear is determined by the startYear entered previously by the user
+     * The max year need only be greater than the startYear
+     * If an invalid value is entered the user is notified and asked to re-enter a value.
+     * @param reader
+     * */
     private void setYearEndConsole(BufferedReader reader) throws IOException {
         int minYear = this.year_start;
         int maxYear = 2018;
@@ -68,6 +85,11 @@ public class UserInterface {
         }
     }
 
+    /**
+     * Any value 1-12 is valid for the start month
+     * If an invalid value is entered the user is notified and asked to re-enter a value.
+     * @param reader
+     * */
     private void setMonthStartConsole(BufferedReader reader) throws IOException {
         int minMonth = 1;
         int maxMonth = 12;
@@ -86,6 +108,11 @@ public class UserInterface {
         }
     }
 
+    /**
+     * The user may enter any value 1-12 provided that if  startYear = endYear the startMonth >= endMonth
+     * If an invalid value is entered the user is notified and asked to re-enter a value.
+     * @param reader
+     * */
     private void setMonthEndConsole(BufferedReader reader) throws IOException {
         int minMonth = 1;
         int maxMonth = 12;
@@ -107,6 +134,13 @@ public class UserInterface {
         }
     }
 
+    /**
+     * The user may enter a value of 0/1
+     * 0 Retrieves the top 5 TMIN values for the provided date range
+     * 1 Retrieves the top 5 TMAX values for the provided date range
+     * If an invalid value is entered the user is notified and asked to re-enter a value.
+     * @param reader
+     * */
     private void setQueryFilter(BufferedReader reader) throws IOException {
         System.out.println("Choose desired result for request range.");
         System.out.println("Enter 0 to retrieve the bottom 5 temperatures for the request range.");

@@ -7,9 +7,6 @@ public class WeatherData implements Comparable<WeatherData>{
     private int value;
     private String qflag;
 
-//    public WeatherData() {
-//    }
-
     public WeatherData(String id, int year, int month, int day, String element, int value, String qflag) {
         this.id = id;
         this.year = year;
@@ -77,8 +74,8 @@ public class WeatherData implements Comparable<WeatherData>{
     }
 
     /**
-     * id=USC00042319 year=2005 month=7 day=20 element=TMAX value=53.9C qflag=
-     id=USC00042319 latitude=36.4622 longitude=-116.8669 elevation=-59.1 state=CA name=DEATH VALLEY
+     * Returns string value to Assignment 2 specifications
+     * (ex. id=USC00042319 year=2005 month=7 day=20 element=TMAX value=53.9C qflag=)
      * */
     public String toString(){
         return String.format("id=%s year=%s month=%s day=%s element=%s value=%s qflag="
@@ -86,8 +83,17 @@ public class WeatherData implements Comparable<WeatherData>{
     }
 
     @Override
-    public int compareTo(WeatherData o) {
-        return this.value;
+    public int compareTo(WeatherData o2) {
+        if (o2 == null) {
+            return  0;
+        }
+        if (this.value > o2.value) {
+            return 1;
+        }
+        if ( this.value < o2.value) {
+            return -1;
+        }
+        return 0;
     }
 
     public int compare(WeatherData o2) {
@@ -100,8 +106,6 @@ public class WeatherData implements Comparable<WeatherData>{
         if ( this.value < o2.value) {
             return -1;
         }
-
-
         return 0;
     }
 }

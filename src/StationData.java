@@ -67,8 +67,8 @@ public  class StationData {
     }
 
     /**
-     * id=USC00042319 latitude=36.4622 longitude=-116.8669 elevation=-59.1 state=CA name=DEATH VALLEY
-
+     * Returns string value matching assignment 2 specifications
+     * (ex. id=USC00042319 latitude=36.4622 longitude=-116.8669 elevation=-59.1 state=CA name=DEATH VALLEY)
      * */
     public String toString(){
         return String.format("id=%s latitude=%s longitude=%s elevation=%s state=%s name=%s "
