@@ -101,7 +101,7 @@ public class ProcessWeatherList implements Callable {
     }
 
     /**
-     * The search max checks the incoming value against the existing records
+     * The search min checks the incoming value against the existing records
      * If the first record is null the new record is added to the array and sorted
      * if the first record is not null and the new record is lesser it is replaced and sorted
      * @param weatherRecord

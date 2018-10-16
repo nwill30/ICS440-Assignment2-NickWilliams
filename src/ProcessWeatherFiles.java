@@ -18,23 +18,39 @@ public class ProcessWeatherFiles implements Callable {
     }
 
 
+    /**
+     * the Callable method uses the obejct attributes to process the WeatherFile to a List of weather data
+     * the list is then condensed to the top 5 and returned via getResults
+     * */
     public WeatherData[] call() throws Exception {
 
         ArrayList<WeatherData> processList = processWeatherFile(processString, userInput);
         return getResults(processList, resultSet);
     }
 
+    /**
+     * The newRecord and array of existing records are passed to be processed
+     * The newRecord is used to search the existing records to see if it a top 5
+     * The search method is (min/max) is determined by the userInput
+     * @param processList
+     * @param resultSet
+     * */
     private WeatherData[] getResults(ArrayList<WeatherData> processList, WeatherData[] resultSet) {
         if(!(processList == null)){
             if(userInput.isMaximum()){
-                return resultSet =searchMax(resultSet, processList);
+                return searchMax(resultSet, processList);
             }else if(userInput.isMinimum()){
-                return resultSet = searchMin(resultSet, processList);
+                return searchMin(resultSet, processList);
             }
         }
         return resultSet;
     }
 
+    /**
+     * Receives an existing input file and reads through and assigns each line to an array
+     * @param inputFile
+     * @return fileList
+     */
     public static ArrayList<String> readFileInput(File inputFile) {
         ArrayList<String> fileList = new ArrayList<>();
         try {
@@ -51,6 +67,15 @@ public class ProcessWeatherFiles implements Callable {
         return fileList;
     }
 
+    /**
+     * A string containing the record to process and the desired outcome (userInput) are received
+     * The record is parsed by string index values and the element from the parsed record is checked against desired outcome
+     * TMIN/TMAX if the element does not match the record is not processed
+     * If the record date falls outside of the userInput date range the record is not processed
+     * If the record satisfies the pre-conditions a new WeatherData object is created and added to the WeatherdataList]
+     * @param userInput
+     * @param thisLine
+     * */
     public static ArrayList<WeatherData> processWeatherFile(String thisLine, UserInterface userInput){
         ArrayList<WeatherData> weatherDataList = new ArrayList<>();
         String id = thisLine.substring(0,11);
@@ -63,7 +88,6 @@ public class ProcessWeatherFiles implements Callable {
         }else if(userInput.isMaximum() && !element.equals("TMAX")){
             return null;
         }
-
         if(year < userInput.getYear_start() || (year == userInput.getYear_start() && month < userInput.getMonth_start())){
             return null;
         }else if(year > userInput.getYear_end() || (year == userInput.getYear_end() && month > userInput.getMonth_end())){
@@ -76,10 +100,16 @@ public class ProcessWeatherFiles implements Callable {
                 weatherDataList.add(wd);
             }
         }
-
         return weatherDataList;
     }
 
+    /**
+     * The search max checks the incoming value against the existing records
+     * If the first record is null the new record is added to the array and sorted
+     * if the first record is not null and the new record is greater it is replaced and sorted
+     * @param resultSet
+     * @param weatherData
+     * */
     public static WeatherData[] searchMax(WeatherData[] resultSet, ArrayList<WeatherData> weatherData) {
         int sortMinMax = 1;
         /**can I sort nulls to the front?*/
@@ -98,9 +128,15 @@ public class ProcessWeatherFiles implements Callable {
         return resultSet;
     }
 
+    /**
+     * The search min checks the incoming value against the existing records
+     * If the first record is null the new record is added to the array and sorted
+     * if the first record is not null and the new record is lesser it is replaced and sorted
+     * @param weatherData
+     * @param resultSet
+     * */
     public static WeatherData[] searchMin(WeatherData[] resultSet, ArrayList<WeatherData> weatherData) {
         int sortMinMax = 0;
-        /**can I sort nulls to the front?*/
         for(WeatherData i : weatherData){
             if(resultSet[0]==null){
                 resultSet[0]=i;
