@@ -116,31 +116,41 @@ public class ProcessWeatherFiles implements Callable {
         return resultSet;
     }
 
+    /**
+     * The sortList method receives a 1/0 value from the calling record determining mix/max order sort
+     * In either case the array is order by checking each index value against all following values
+     * If a comparedTo index is null the value returned is a 0 and it is replaced
+     * @param resultSet
+     * @param sortMinMax
+     * */
     public static WeatherData[] sortList(WeatherData[] resultSet, int sortMinMax) {
 
         switch (sortMinMax){
             case 1 :
                 for(int i = 0; i < resultSet.length-1;i++){
-                    if (resultSet[i].compare(resultSet[i+1])>=0){
-                        WeatherData promote = resultSet[i];
-                        WeatherData demote = resultSet[i+1];
-                        resultSet[i] = demote;
-                        resultSet[i+1]= promote;
+                    int j = i;
+                    while (j+1<resultSet.length && resultSet[j] !=null && resultSet[j].compare(resultSet[j+1])>=0){
+                        WeatherData promote = resultSet[j];
+                        WeatherData demote = resultSet[j+1];
+                        resultSet[j] = demote;
+                        resultSet[j+1]= promote;
+                        j++;
                     }
                 }
                 break;
             case 0 :
                 for(int i = 0; i < resultSet.length-1;i++){
-                    if (resultSet[i].compare(resultSet[i+1])<=0){
-                        WeatherData promote = resultSet[i];
-                        WeatherData demote = resultSet[i+1];
-                        resultSet[i] = demote;
-                        resultSet[i+1]= promote;
+                    int j = i;
+                    while (j+1<resultSet.length && resultSet[j] !=null && resultSet[j].compare(resultSet[j+1])<=0){
+                        WeatherData promote = resultSet[j];
+                        WeatherData demote = resultSet[j+1];
+                        resultSet[j] = demote;
+                        resultSet[j+1]= promote;
+                        j++;
                     }
                 }
                 break;
         }
-
 
 
         return resultSet;
